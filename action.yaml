@@ -1,5 +1,8 @@
 name: Setup Node with Cache
 description: Quickly sets up any JS/TS project with npm and node_modules cache configured
+branding:
+  icon: play-circle
+  color: green
 
 inputs:
   NODE_VERSION:
