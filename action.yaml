@@ -1,0 +1,43 @@
+name: Setup Node with Cache
+description: Quickly sets up any JS/TS project with npm and node_modules cache configured
+
+inputs:
+  NODE_VERSION:
+    description: Node version to use (optional)
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set node version
+      id: node-version
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.NODE_VERSION }}" ]; then
+          echo "value=${{ inputs.NODE_VERSION }}" >> $GITHUB_OUTPUT
+        elif [ -f .nvmrc ]; then
+          echo "value=$(cat .nvmrc)" >> $GITHUB_OUTPUT
+        else
+          echo "value=18.0.0" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Setup node
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ steps.node-version.outputs.value }}
+        cache: npm
+
+    - name: Cache node_modules
+      uses: actions/cache@v3
+      id: node-modules-cache
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-node-${{ steps.node-version.outputs.value }}-modules-${{ hashFiles('package-lock.json') }}
+
+    - name: Install dependencies (on cache miss)
+      if: steps.node-modules-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: npm ci
