@@ -1,5 +1,5 @@
 name: Setup Node with Cache
-description: Quickly sets up any JS/TS project with npm and node_modules cache configured
+description: Efficiently sets up any project using node environment with package manager and node_modules cache configured
 branding:
   icon: play-circle
   color: green
@@ -27,20 +27,34 @@ runs:
           echo "value=18.0.0" >> $GITHUB_OUTPUT
         fi
 
+    - name: Determine package manager
+      id: package-manager
+      shell: bash
+      run: |
+        if [ -f "yarn.lock" ]; then
+          echo "name=yarn" >> $GITHUB_OUTPUT
+          echo "lock-file=yarn.lock" >> $GITHUB_OUTPUT
+          echo "install-command=yarn install --frozen-lockfile" >> $GITHUB_OUTPUT
+        else
+          echo "name=npm" >> $GITHUB_OUTPUT
+          echo "lock-file=package-lock.json" >> $GITHUB_OUTPUT
+          echo "install-command=npm ci" >> $GITHUB_OUTPUT
+        fi
+
     - name: Setup node
       uses: actions/setup-node@v3
       with:
         node-version: ${{ steps.node-version.outputs.value }}
-        cache: npm
+        cache: ${{ steps.package-manager.outputs.name }}
 
     - name: Cache node_modules
       uses: actions/cache@v3
       id: node-modules-cache
       with:
         path: node_modules
-        key: ${{ runner.os }}-node-${{ steps.node-version.outputs.value }}-modules-${{ hashFiles('package-lock.json') }}
+        key: ${{ runner.os }}-node-${{ steps.node-version.outputs.value }}-modules-${{ hashFiles(steps.package-manager.outputs.lock-file) }}
 
     - name: Install dependencies (on cache miss)
       if: steps.node-modules-cache.outputs.cache-hit != 'true'
       shell: bash
-      run: npm ci
+      run: ${{ steps.package-manager.outputs.install-command }}
