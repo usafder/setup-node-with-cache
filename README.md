@@ -2,8 +2,6 @@
 
 GitHub action to efficiently set up your project that is using the node environment. You now don't have to write down all those boring steps for setting up your project as this action will take care of that for you!
 
-> Note: Currently, it only supports `npm` but the idea is to add in support for other package managers like `yarn` and `pnpm` as well in the near future.
-
 ### Example Usage:
 ```yaml
 name: CI
